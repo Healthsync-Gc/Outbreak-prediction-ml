@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Results</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-top: 20px;
+        }
+        .back-button {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header text-center">
+                <h1>Prediction Results</h1>
+            </div>
+            <div class="card-body">
+                <div>
+                    <canvas id="forecastChart"></canvas>
+                </div>
+                <table class="table table-bordered mt-4">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Prediction</th>
+                            <th>Lower Bound</th>
+                            <th>Upper Bound</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in forecast %}
+                        <tr>
+                            <td>{{ item.ds }}</td>
+                            <td>{{ item.yhat }}</td>
+                            <td>{{ item.yhat_lower }}</td>
+                            <td>{{ item.yhat_upper }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <form action="/download_csv" method="POST" class="mt-4">
+                    <input type="hidden" name="region" value="{{ request.form.region }}">
+                    <input type="hidden" name="periods" value="{{ request.form.periods }}">
+                    <input type="hidden" name="frequency" value="{{ request.form.frequency }}">
+                    <button type="submit" class="btn btn-primary">Download CSV</button>
+                </form>
+                <a href="/" class="btn btn-secondary back-button">Back</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('forecastChart').getContext('2d');
+            const labels = {{ forecast | tojson | safe }}.map(item => item.ds);
+            const data = {{ forecast | tojson | safe }}.map(item => item.yhat);
+            const lowerBounds = {{ forecast | tojson | safe }}.map(item => item.yhat_lower);
+            const upperBounds = {{ forecast | tojson | safe }}.map(item => item.yhat_upper);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Prediction',
+                            data: data,
+                            borderColor: 'blue',
+                            fill: false
+                        },
+                        {
+                            label: 'Lower Bound',
+                            data: lowerBounds,
+                            borderColor: 'red',
+                            fill: false,
+                            borderDash: [5, 5]
+                        },
+                        {
+                            label: 'Upper Bound',
+                            data: upperBounds,
+                            borderColor: 'green',
+                            fill: false,
+                            borderDash: [5, 5]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Values'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

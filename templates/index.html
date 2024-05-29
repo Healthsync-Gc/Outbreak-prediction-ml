@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outbreak Prediction</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card mx-auto" style="max-width: 500px;">
+            <div class="card-header text-center">
+                <h1>Outbreak Prediction Model</h1>
+            </div>
+            <div class="card-body">
+                <form action="/predict_table" method="POST">
+                    <div class="form-group">
+                        <label for="region">Region</label>
+                        <select name="region" id="region" class="form-control" required>
+                            <option value="addis_ababa">Addis Ababa</option>
+                            <option value="amhara">Amhara</option>
+                            <option value="oromia">Oromia</option>
+                            <option value="tigray">Tigray</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="periods">Periods</label>
+                        <input type="number" name="periods" id="periods" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="frequency">Frequency</label>
+                        <select name="frequency" id="frequency" class="form-control" required>
+                            <option value="D">Daily</option>
+                            <option value="W">Weekly</option>
+                            <option value="M">Monthly</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Predict</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
