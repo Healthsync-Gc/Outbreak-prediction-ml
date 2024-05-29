@@ -39,8 +39,7 @@ Then run the command above.
 
 Ensure your data files are in the `datas` directory. Each file should be named according to the region (e.g., `addis_ababa.csv`, `amhara.csv`, etc.) and contain the following columns:
 
-- `date`: The date column
-- `value`: The value column to be forecasted
+- `Date,Cured,Deaths,Confirmed`
 
 ### 5. Run the Training Script
 
