@@ -1,17 +1,15 @@
-from flask import Flask, request, jsonify, render_template, send_file
-import pandas as pd
-import pickle
-from datetime import datetime
-from prophet import Prophet
-import io
-import os
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-from urllib.parse import quote as url_quote
+import pandas as pd
+from prophet import Prophet
+import os
+import pickle
+
+
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
-# Function to load model based on region
 def load_model(region):
     model_path = f'models/{region}_model.pkl'
     if not os.path.exists(model_path):
@@ -20,19 +18,42 @@ def load_model(region):
         model = pickle.load(f)
     return model
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+def calculate_resource_needs(prediction_data, standard_requirements):
+    total_resources_needed = {key: 0 for key in standard_requirements.keys()}
+    for index, row in prediction_data.iterrows():
+        yhat = row['yhat']
+        for resource, multiplier in standard_requirements.items():
+            total_resources_needed[resource] += int(multiplier * yhat)
+
+    return total_resources_needed
+
+def compare_with_available_resources(predicted_needs, available_resources):
+    recommendations = {}
+    for resource, needed in predicted_needs.items():
+        available = available_resources.get(resource, 0)
+        if needed > available:
+            recommendations[resource] = needed - available
+    return recommendations
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    user_input = request.json
-    region = user_input['region']
-    start_date = user_input['start_date']
-    end_date = user_input['end_date']
-
+    print(request)
+    content = request.json
+    region = content['region']
+    start_date = content['start_date']
+    end_date = content['end_date']
+    available_resources = content['available_resources']
+    standard_requirements ={
+  "masks": 50,
+  "gloves": 100,
+  "hand_sanitizers": 2,
+  "covid_test_kits": 1,
+  "oxygen_supplies": 0.02,
+  "ventilators": 0.005,
+  "ambulance": 0.00005
+}
+    # return content
     try:
-        # Load the appropriate model based on the selected region
         model = load_model(region)
 
         # Generate future dates within the specified range
@@ -40,62 +61,27 @@ def predict():
         
         # Make predictions
         forecast = model.predict(future_dates)
+
         
-        # Return the forecast as JSON
-        return jsonify(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].to_dict(orient='records'))
+        # Extract the relevant predictions
+        predictions = forecast[['ds', 'yhat']]
+        # print(type(predictions))
+        # return predictions
+        # Get resource recommendations
+        needed_resource = calculate_resource_needs(predictions,standard_requirements)
+
+        recommendations = compare_with_available_resources(needed_resource,available_resources)
+        # Convert predictions to a list of dictionaries for JSON serialization
+        predictions_list = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].to_dict(orient='records')
+        response = {
+            "prediction":predictions_list,
+            "recomendation":[{"name" : key, "value": val} for key, val in recommendations.items()]
+            }
+
+        return jsonify(response)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-@app.route('/predict_table', methods=['POST'])
-def predict_table():
-    region = request.form['region']
-    start_date = request.form['start_date']
-    end_date = request.form['end_date']
-
-    try:
-        # Load the appropriate model based on the selected region
-        model = load_model(region)
-
-        # Generate future dates within the specified range
-        future_dates = pd.date_range(start=start_date, end=end_date).to_frame(index=False, name='ds')
-        
-        # Make predictions
-        forecast = model.predict(future_dates)
-        
-        # Convert forecast to JSON-like structure
-        forecast_data = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].to_dict(orient='records')
-        
-        return render_template('results.html', forecast=forecast_data)
-    except Exception as e:
-        return render_template('error.html', error=str(e))
-
-@app.route('/download_csv', methods=['POST'])
-def download_csv():
-    region = request.form['region']
-    start_date = request.form['start_date']
-    end_date = request.form['end_date']
-
-    try:
-        # Load the appropriate model based on the selected region
-        model = load_model(region)
-
-        # Generate future dates within the specified range
-        future_dates = pd.date_range(start=start_date, end=end_date).to_frame(index=False, name='ds')
-        
-        # Make predictions
-        forecast = model.predict(future_dates)
-
-        # Convert forecast to CSV
-        forecast_csv = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].to_csv(index=False)
-
-        # Create a bytes buffer to hold the CSV data
-        buffer = io.BytesIO()
-        buffer.write(forecast_csv.encode('utf-8'))
-        buffer.seek(0)
-
-        return send_file(buffer, as_attachment=True, download_name='forecast.csv', mimetype='text/csv')
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run("127.0.0.1", port=5000, debug=True)
