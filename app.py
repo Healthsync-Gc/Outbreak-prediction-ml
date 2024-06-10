@@ -49,7 +49,8 @@ def predict():
   "hand_sanitizers": 2,
   "covid_test_kits": 1,
   "oxygen_supplies": 0.02,
-  "ventilators": 0.005
+  "ventilators": 0.005,
+  "human_resources": 0.005
 }
     # print(standard_requirements)
     # return content
