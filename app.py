@@ -44,13 +44,19 @@ def predict():
     end_date = content['end_date']
     available_resources = content['available_resources']
     standard_requirements = {
-  "masks": 50,
-  "gloves": 100,
-  "hand_sanitizers": 2,
-  "covid_test_kits": 1,
-  "oxygen_supplies": 0.02,
-  "ventilators": 0.005,
-  "human_resources": 0.005
+    "masks": 50,
+    "gloves": 100,
+    "hand_sanitizers": 2,
+    "covid_test_kits": 1,
+    "oxygen_supplies": 0.02,
+    "ventilators": 0.005,
+    "human_resources": 0.005,
+    "oxygen_supplies": 0.02,
+    "antiviral_medications": 0.2,
+    "temporary_housing": 0.05,
+    "hospital_beds": 1,
+    "thermometers": 0.0001,
+    "Ambulances": 0.005,
 }
     # print(standard_requirements)
     # return content
