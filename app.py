@@ -43,8 +43,15 @@ def predict():
     start_date = content['start_date']
     end_date = content['end_date']
     available_resources = content['available_resources']
-    standard_requirements = content['standard_requirements']
-    print(standard_requirements)
+    standard_requirements = {
+  "masks": 50,
+  "gloves": 100,
+  "hand_sanitizers": 2,
+  "covid_test_kits": 1,
+  "oxygen_supplies": 0.02,
+  "ventilators": 0.005
+}
+    # print(standard_requirements)
     # return content
     try:
         model = load_model(region)
